@@ -10,6 +10,7 @@ private ArrayList<ADOxxDecisionTableEntry> input_names;
 private ArrayList<ADOxxDecisionTableEntry> output_names;
 private ArrayList<ADOxxDecisionTableRow> rows;
 private int priority;
+private ArrayList<String> output_values;
 
 public int getPriority() {
 	return priority;
@@ -67,6 +68,14 @@ public void setAggregation_indicator(String aggregation_indicator) {
 	this.aggregation_indicator = aggregation_indicator;
 }
 
+public ArrayList<String> getOutput_values() {
+	return output_values;
+}
+
+public void setOutput_values(ArrayList<String> output_values) {
+	this.output_values = output_values;
+}
+
 public ADOxxDecisionTable(
 		String name,
 		String hit_policy, 
@@ -83,6 +92,27 @@ public ADOxxDecisionTable(
 	this.output_names = output_names;
 	this.rows = rows;
 	this.priority = priority;
+}
+
+public ADOxxDecisionTable(
+		//decision table for hit policy "Single Hit Priority" and "Multiple Hit Output Order"
+		String name,
+		String hit_policy, 
+		String aggregation_indicator,
+		ArrayList<ADOxxDecisionTableEntry> input_names,
+		ArrayList<ADOxxDecisionTableEntry> output_names,
+		ArrayList<ADOxxDecisionTableRow> rows,
+		int priority,
+		ArrayList<String> output_values) {
+	
+	this.name = name;
+	this.hit_policy = hit_policy;
+	this.aggregation_indicator = aggregation_indicator;
+	this.input_names = input_names;
+	this.output_names = output_names;
+	this.rows = rows;
+	this.priority = priority;
+	this.output_values = output_values;
 }
 
 }

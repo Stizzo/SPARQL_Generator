@@ -7,7 +7,6 @@ public class ADOxxDecisionTableNormalizedEntry {
 	private Boolean isARelation;//Is a relation to write on the SparQL rule
 	private Boolean haveValue;	//Have a value to match in the decision table
 	private int num_entry;	//Match with the input/output entry  column
-	private int output_priority;
 	
 	public String getObject_name() {
 		return object_name;
@@ -57,15 +56,6 @@ public class ADOxxDecisionTableNormalizedEntry {
 		this.num_entry = num_entry;
 	}
 
-
-	public int getOutput_priority() {
-		return output_priority;
-	}
-
-	public void setOutput_priority(int output_priority) {
-		this.output_priority = output_priority;
-	}
-
 	public ADOxxDecisionTableNormalizedEntry(String object_name, String property, String dest_name, Boolean isARelation,
 			Boolean haveValue) {
 		super();
@@ -78,7 +68,7 @@ public class ADOxxDecisionTableNormalizedEntry {
 	}
 
 	public ADOxxDecisionTableNormalizedEntry(String object_name, String property, String dest_name, Boolean isARelation,
-			Boolean haveValue, int num_entry, int output_priority) {
+			Boolean haveValue, int num_entry) {
 		super();
 		this.object_name = object_name;
 		this.property = property;
@@ -86,7 +76,6 @@ public class ADOxxDecisionTableNormalizedEntry {
 		this.isARelation = isARelation;
 		this.haveValue = haveValue;
 		this.num_entry = num_entry;
-		this.output_priority = output_priority;
 		
 	}
 
