@@ -1235,25 +1235,23 @@ public class Operations {
 							//Finding the rows and adding them to an ordered list
 							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								ordered_rows.add(DT.getRows().get(l));
-								System.out.println("trovata "+ temp_output_values_array[k].trim());
 							}
 						}
 						for (int l = 0; l < DT.getRows().size(); l++){
 							//Finding the rows and removing them to the list of rows
 							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								DT.getRows().remove(l);
-								System.out.println("rimossa "+temp_output_values_array[k].trim());
 							}
 						}
 					
 						
-						
 					}
 					if (DT.getRows().size()>0){
-						for (int l = 0; l < DT.getRows().size(); l++){
+						for (int l = DT.getRows().size()-1; l >= 0; l--){
 							//adding the remainders rows
 							ordered_rows.add(DT.getRows().get(l));
-							System.out.println("adding remaining "+DT.getRows().get(l).getNum_rule());
+							DT.getRows().remove(l);
+							
 						}	
 						}
 						
