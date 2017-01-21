@@ -537,21 +537,28 @@ public class Operations {
 														} // end if checking for
 															// no-null values
 
-													} else if (num_row == 2 && hit_policy.equals("Single Hit Priority")
-															|| hit_policy.equals("Multiple Hit Output Order")) {
+													} else if (num_row == 2 && (hit_policy.equals("Single Hit Priority")
+															|| hit_policy.equals("Multiple Hit Output Order"))) {
 
 														if (temp_attribute.getAttributes().item(0).getNodeValue()
 																.startsWith("Output")) {
-															output_values.add(temp_attribute.getLastChild()
-																	.getNodeValue().replaceAll("&quot;", "\""));
+															
+															if (temp_attribute.getChildNodes().getLength() != 0){
+																
+															output_values.add(temp_attribute.getLastChild().getNodeValue().replaceAll("&quot;", "\""));
+															}
 														}
-													} else if (num_row >= 1) { // parsing
+														
+														
+														
+													} else if (num_row >= 1)
+															 { // parsing
+														
 																				// data
 														if (temp_attribute.getChildNodes().getLength() != 0) { // chicking
 																												// for
 																												// no-null
 																												// values
-
 															if (temp_attribute.getAttributes().item(0).getNodeValue()
 																	.startsWith("Input")) {
 																input.add(temp_attribute.getLastChild().getNodeValue()
@@ -581,8 +588,8 @@ public class Operations {
 												} // end if we are analyzing an
 													// ATTRIBUTE
 											} // end iterating ATTRIBUTE of ROW
-											if (num_row > 2 && hit_policy.equals("Single Hit Priority")
-													|| hit_policy.equals("Multiple Hit Output Order")) {
+											if (num_row > 2 && (hit_policy.equals("Single Hit Priority")
+													|| hit_policy.equals("Multiple Hit Output Order"))) {
 												rows.add(new ADOxxDecisionTableRow(num_rule, input, output));
 											} else if (num_row > 1 && !hit_policy.equals("Single Hit Priority")
 													&& !hit_policy.equals("Multiple Hit Output Order")) {
@@ -845,199 +852,23 @@ public class Operations {
 				}
 			}
 
-			if (DT.getHit_policy().equals("Single Hit Unique")) {
+			if (DT.getHit_policy().equals("Single Hit Unique") ||
+					DT.getHit_policy().equals("Single Hit First") ||
+					DT.getHit_policy().equals("Single Hit Any")) {
 				// ***********************
 				// 1 - SINGLE HIT UNIQUE
 				// ***********************
-				for (int j = 0; j < temp_output_entries.size(); j++) {
-					// PARSING ALL THE OUTPUT
-					writer.println("CONSTRUCT {");
-
-					if (DT.getOutput_names().get(temp_output_entries.get(j).getNum_entry()).getObject_name()
-							.startsWith("?")) {
-						writer.print(
-								DT.getOutput_names().get(temp_output_entries.get(j).getNum_entry()).getObject_name());
-					} else {
-						for (int x = 0; x < variables.size(); x++) {
-							if (variables.get(x).getOntologyItem().getNameWithoutPrefix().equals(DT.getOutput_names()
-									.get(temp_output_entries.get(j).getNum_entry()).getObject_name())) {
-								writer.print(variables.get(x).getVariableName());
-							}
-						}
-					}
-					// HERE THERE IS THE LIMITATION OF THE ONE PROPERTY ON THE
-					// OUTPUT ENTRY
-					writer.print(" "
-							+ getPropertyFromString(DT.getOutput_names().get(temp_output_entries.get(j).getNum_entry())
-									.getProperties().get(0)).getName()
-							+ " " + DT.getOutput_names().get(temp_output_entries.get(j).getNum_entry()).getDest_name());
-					if (temp_output_entries.get(j).getNum_entry() != DT.getOutput_names().size() - 1) {
-						writer.println(" . ");
-					}
-					writer.println("}");
-					writer.println("WHERE {");
-
-					// DECLARATIONS OF CLASSES
-					for (int b = 0; b < variables.size(); b++) {
-						writer.println("?" + variables.get(b).getVariableName() + " rdf:type "
-								+ variables.get(b).getOntologyItem().getName() + " . ");
-					}
-					// INSTANCE OF INPUT ALL RELATIONS
-					for (int y = 0; y < temp_input_entries.size(); y++) {
-						if (temp_input_entries.get(y).getIsARelation()) {
-							writer.print("OPTIONAL {" + temp_input_entries.get(y).getObject_name() + " "
-									+ getPropertyFromString(temp_input_entries.get(y).getProperty()).getName() + " "
-									+ temp_input_entries.get(y).getDest_name() + "}");
-							writer.println(" . ");
-						}
-					}
-					// INSTANCE OF INPUT THAT ARE NOT A RELATION
-					for (int c = 0; c < temp_input_entries.size(); c++) {
-						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()) {
-							writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
-							if (temp_input_entries.get(c).getProperty().equals("label")) {
-								writer.print("rdfs:label");
-							} else {
-								writer.print(getPropertyFromString(temp_input_entries.get(c).getProperty()).getName());
-							}
-							writer.print(" " + temp_input_entries.get(c).getDest_name() + "}");
-							writer.println(" . ");
-						}
-
-					}
-
-					// DECLARATIONS OF OUTPUT
-
-					// IF THE OUTPUT IS NOT A DATATYPE, WE NEED TO DEFINE THE
-					// LABEL OF THE DESTINATION OBJECT
-
-					if (temp_output_entries.get(j).getProperty().equals("label")) {
-						writer.print("OPTIONAL {" + temp_output_entries.get(j).getObject_name() + " " + "rdfs:label"
-								+ " " + temp_output_entries.get(j).getDest_name() + "}");
-						if (j != temp_output_entries.size() - 1) {
-							writer.println(" . ");
-						}
-					}
-
-					writer.println("BIND(");
-					int num_input = 0;
-					if (temp_output_entries.get(j).getHaveValue()) {
-						// GETTING ALL THE ROWS OF THE DT
-						for (int k = 0; k < DT.getRows().size(); k++) {
-							// IF THE OUTPUT IS DIFFERENT FROM "-"
-							if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
-									.equals("-")) {
-
-								writer.print("IF (");
-								num_input++;
-								boolean firstInput = true;
-								// PARSING ALL THE EFFECTIVE INPUTS
-								for (int l = 0; l < temp_input_entries.size(); l++) {
-
-									if (temp_input_entries.get(l).getHaveValue() && !DT.getRows().get(k).getInput()
-											.get(temp_input_entries.get(l).getNum_entry()).equals("-")) {
-										if (!firstInput) {
-											writer.print(" && ");
-										}
-
-										// WRITING THE DESTINATION INPUT
-										// CRITERIA
-										writer.print(temp_input_entries.get(l).getDest_name());
-										// WRITING THE OPERATOR OF INPUT
-										// CRITERIA
-										String[] arraySplittate = DT.getRows().get(k).getInput()
-												.get(temp_input_entries.get(l).getNum_entry()).split(" ");
-										if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
-												|| arraySplittate[0].startsWith(">")
-												|| arraySplittate[0].startsWith("<")) {
-											// Here is parsing a number/date
-											// operator
-											writer.print(arraySplittate[0]);
-										} else {
-											// Here is parsing a non number/date
-											// operator
-											writer.print(" = ");
-										}
-										// WRITING THE INPUT DATA CRITERIA
-										if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
-												|| arraySplittate[0].startsWith(">")
-												|| arraySplittate[0].startsWith("<")) {
-											// Here is writing a date/number
-											// value
-											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
-											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
-													.get(temp_input_entries.get(l).getNum_entry())).getName());
-										} else {
-											// Here is writing a "string" or
-											// value
-											writer.print(DT.getRows().get(k).getInput()
-													.get(temp_input_entries.get(l).getNum_entry()));
-										}
-
-										firstInput = false;
-
-									}
-								} // for every input
-
-								// WRITING THE OUTPUT FOR THE ROW
-								writer.print(", ");
-								if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
-										.equals("-")) {
-									// IF THE OUTPUT NAME IS DIFFERENT FROM "-"
-									// HERE THERE IS THE LIMIT OF 1 PROPERTY IN
-									// THE OUTPUT NAME
-									if (getPropertyFromString(DT.getOutput_names()
-											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
-										// Here it is expecting to find an
-										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
-									} else {
-										// Here it is expeecting to find a
-										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
-									}
-								} else {
-									// IF THE OUTPUT IS "-"
-									writer.print("\"\"");
-								}
-
-								writer.println(", ");
-							} // end if output is not "-"
-							if (k == DT.getRows().size() - 1) {
-								writer.print("\"\"");
-								for (int z = 0; z < num_input; z++) {
-									writer.print(")");
-								}
-								writer.println(" AS " + temp_output_entries.get(j).getDest_name() + ") .");
-								writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
-
-							}
-
-						} // for every row
-
-					}
-
-					writer.println("}");
-					writer.println("- - - - - - - - - - -");
-
-				} // end output
-				writer.println("=========");
-
-				variables.clear();
-
-			} else if (DT.getHit_policy().equals("Single Hit Any")) {
+				
 				// ***********************
 				// 2 - SINGLE HIT ANY
 				// ***********************
-				// Need to check the consistency of the Decision Table
-
-				writer_status.println("WARNING: Cannot check the consistency for the Decision Table \""
-						+ adoxxDecisionTables.get(i).getName() + "\" with the Hit Policy \"Single Hit Any\" (A)");
-
+				if (DT.getHit_policy().equals("Single Hit Any")){
+					writer_status.println("WARNING: Cannot check the consistency for the Decision Table \""
+							+ adoxxDecisionTables.get(i).getName() + "\" with the Hit Policy \"Single Hit Any\" (A)");
+				}
+				// ***********************
+				// 4 - SINGLE HIT FIRST
+				// ***********************
 				for (int j = 0; j < temp_output_entries.size(); j++) {
 					// PARSING ALL THE OUTPUT
 					writer.println("CONSTRUCT {");
@@ -1438,10 +1269,9 @@ public class Operations {
 				writer.println("=========");
 
 				variables.clear();
-
-			} else if (DT.getHit_policy().equals("Single Hit First")) {
+			} else if (DT.getHit_policy().equals("Single Hit Rule Number")) {
 				// ***********************
-				// 4 - SINGLE HIT FIRST
+				// 5 - SINGLE HIT RULE NUMBER
 				// ***********************
 				ArrayList<ADOxxDecisionTableRow> sorted_rows = new ArrayList<ADOxxDecisionTableRow>();
 				while (DT.getRows().size() != 0) {
@@ -1638,14 +1468,51 @@ public class Operations {
 				writer.println("=========");
 
 				variables.clear();
+			
 			} else if (DT.getHit_policy().equals("Multiple Hit Output Order")) {
 				// ***********************
-				// 5 - MULTIPLE HIT OUTPUT ORDER
+				// 6 - MULTIPLE HIT OUTPUT ORDER
 				// ***********************
 				// TODO: implement priority
 
 				for (int j = 0; j < temp_output_entries.size(); j++) {
 					// GETTING ALL THE ROWS OF THE DT
+					
+					// ORDERING ROWS BASED ON OUTPUT VALUES
+					ArrayList<ADOxxDecisionTableRow> ordered_rows = new ArrayList<ADOxxDecisionTableRow>();
+					String temp_output_values_array[] = DT.getOutput_values()
+							.get(temp_output_entries.get(j).getNum_entry()).split(",");
+					while (DT.getRows().size()>0){
+					for (int k = 0; k < temp_output_values_array.length; k++){
+						
+						for (int l = 0; l < DT.getRows().size(); l++){
+							//Finding the rows and adding them to an ordered list
+							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
+								ordered_rows.add(DT.getRows().get(l));
+							}
+						}
+						for (int l = 0; l < DT.getRows().size(); l++){
+							//Finding the rows and removing them to the list of rows
+							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
+								DT.getRows().remove(l);
+							}
+						}
+					
+						
+					}
+					if (DT.getRows().size()>0){
+						for (int l = DT.getRows().size()-1; l >= 0; l--){
+							//adding the remainders rows
+							ordered_rows.add(DT.getRows().get(l));
+							DT.getRows().remove(l);
+							
+						}	
+						}
+						
+					}
+					
+					DT.setRows(ordered_rows);
+					
 					for (int k = 0; k < DT.getRows().size(); k++) {
 						// PARSING ALL THE OUTPUT
 						writer.println("CONSTRUCT {");
@@ -1728,7 +1595,6 @@ public class Operations {
 							// IF THE OUTPUT IS DIFFERENT FROM "-"
 							if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
 									.equals("-")) {
-
 								writer.print("IF (");
 								// num_input++;
 								boolean firstInput = true;
@@ -1824,7 +1690,7 @@ public class Operations {
 				variables.clear();
 			} else if (DT.getHit_policy().equals("Multiple Hit Rule Order")) {
 				// ***********************
-				// 6 - MULTIPLE HIT RULE ORDER
+				// 7 - MULTIPLE HIT RULE ORDER
 				// ***********************
 
 				ArrayList<ADOxxDecisionTableRow> sorted_rows = new ArrayList<ADOxxDecisionTableRow>();
@@ -2024,7 +1890,7 @@ public class Operations {
 
 			} else if (DT.getHit_policy().equals("Multiple Hit Collection")) {
 				// ***********************
-				// 7 - MULTIPLE HIT COLLECTION
+				// 8 - MULTIPLE HIT COLLECTION
 				// ***********************
 				String alternative_rule_index = "";
 				for (int j = 0; j < DT.getRows().size(); j++) {
