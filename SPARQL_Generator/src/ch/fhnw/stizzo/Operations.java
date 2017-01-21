@@ -1696,11 +1696,11 @@ public class Operations {
 				ArrayList<ADOxxDecisionTableRow> sorted_rows = new ArrayList<ADOxxDecisionTableRow>();
 				while (DT.getRows().size() != 0) {
 					int id = -100;
-					int max = -1000;
+					int min = 1000;
 					for (int h = 0; h < DT.getRows().size(); h++) {
-						if (DT.getRows().get(h).getNum_rule() > max) {
+						if (DT.getRows().get(h).getNum_rule() < min) {
 							id = h;
-							max = DT.getRows().get(h).getNum_rule();
+							min = DT.getRows().get(h).getNum_rule();
 						}
 					}
 					sorted_rows.add(DT.getRows().get(id));
