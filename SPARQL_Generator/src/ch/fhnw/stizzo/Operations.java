@@ -1042,7 +1042,7 @@ public class Operations {
 					}
 
 					writer.println("}");
-					writer.println("- - - - - - - - - - -");
+					writer.println("");
 
 				} // end output
 				writer.println("=========");
@@ -1263,7 +1263,7 @@ public class Operations {
 					}
 
 					writer.println("}");
-					writer.println("- - - - - - - - - - -");
+					writer.println("");
 
 				} // end output
 				writer.println("=========");
@@ -1462,7 +1462,7 @@ public class Operations {
 					}
 
 					writer.println("}");
-					writer.println("- - - - - - - - - - -");
+					writer.println("");
 
 				} // end output
 				writer.println("=========");
@@ -1681,7 +1681,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} // end rows
 
 				} // end output
@@ -1880,7 +1880,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} // end outputs
 
 				} // end rows
@@ -2101,7 +2101,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} else if (DT.getAggregation_indicator().equals("Max")) {
 						// ===============
 						// MAX AGGREGATOR
@@ -2228,7 +2228,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} else if (DT.getAggregation_indicator().equals("Sum")) {
 						// ===============
 						// SUM AGGREGATOR
@@ -2361,7 +2361,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} else if (DT.getAggregation_indicator().equals("Count")) {
 						// ===============
 						// COUNT AGGREGATOR
@@ -2489,7 +2489,7 @@ public class Operations {
 							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
-						writer.println("- - - - - - - - - - -");
+						writer.println("");
 					} else {
 						writer_status.println(
 								"ERROR: AGGREGATOR not found/detected for the Decision Table \"" + DT.getName() + "\"");
