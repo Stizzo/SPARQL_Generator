@@ -2339,10 +2339,11 @@ public class Operations {
 										// HERE I WRITE THE ALTERNATIVE VALUE IF
 										// IT EXISTS
 										if (!alternative_rule_index.equals("")) {
+											//THERE IS NO ALTERNATIVE RULE IN THe SUM AGGREGATOR
 											// writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index)).getOutput().get(temp_output_entries.get(j).getNum_entry()));
 											writer.print("0");
 										} else {
-											writer.print("\"\"");
+											writer.print("0");
 										}
 
 									} else {
@@ -2358,7 +2359,7 @@ public class Operations {
 								} // end if output is not "-"
 								firstRow = false;
 							} // for every row
-							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
+							//writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
 						writer.println("}");
 						writer.println("");
@@ -2467,10 +2468,11 @@ public class Operations {
 										// HERE I WRITE THE ALTERNATIVE VALUE IF
 										// IT EXISTS
 										if (!alternative_rule_index.equals("")) {
+											//THIS AGGREGATOR DOESN'T HAVE AN ALTERNATIVE RULE
 											// writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index)).getOutput().get(temp_output_entries.get(j).getNum_entry()));
 											writer.print("0");
 										} else {
-											writer.print("\"\"");
+											writer.print("0");
 										}
 
 									} else {
@@ -2486,8 +2488,276 @@ public class Operations {
 								} // end if output is not "-"
 								firstRow = false;
 							} // for every row
-							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
+							//writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
 						}
+						writer.println("}");
+						writer.println("");
+					} else if (DT.getAggregation_indicator().equals("Avg")) {
+						// ===============
+						// AVG AGGREGATOR
+						// ===============
+						//TODO: aggiungere la parte count e fare la divisione
+						int num_input = 0;
+						boolean firstRow = true;
+						
+						//HERE STARTS THE SUM PART
+						
+						if (temp_output_entries.get(j).getHaveValue()) {
+							// GETTING ALL THE ROWS OF THE DT
+							for (int k = 0; k < DT.getRows().size(); k++) {
+								// IF THE OUTPUT IS DIFFERENT FROM "-"
+								if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
+										.equals("-") && !("" + k).equals(alternative_rule_index)) {
+									boolean firstInput = true;
+									writer.print("BIND(");
+									writer.print("IF (");
+									num_input++;
+
+									// PARSING ALL THE EFFECTIVE INPUTS
+									for (int l = 0; l < temp_input_entries.size(); l++) {
+
+										if (temp_input_entries.get(l).getHaveValue() && !DT.getRows().get(k).getInput()
+												.get(temp_input_entries.get(l).getNum_entry()).equals("-")) {
+											if (!firstInput) {
+												writer.print(" && ");
+											}
+
+											// WRITING THE DESTINATION INPUT
+											// CRITERIA
+											writer.print(temp_input_entries.get(l).getDest_name());
+											// WRITING THE OPERATOR OF INPUT
+											// CRITERIA
+											String[] arraySplittate = DT.getRows().get(k).getInput()
+													.get(temp_input_entries.get(l).getNum_entry()).split(" ");
+											if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
+													|| arraySplittate[0].startsWith(">")
+													|| arraySplittate[0].startsWith("<")) {
+												// Here is parsing a number/date
+												// operator
+												writer.print(arraySplittate[0]);
+											} else {
+												// Here is parsing a non
+												// number/date operator
+												writer.print(" = ");
+											}
+
+											// WRITING THE INPUT DATA CRITERIA
+											if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
+													|| arraySplittate[0].startsWith(">")
+													|| arraySplittate[0].startsWith("<")) {
+												// Here is writing a date/number
+												// value
+												writer.print(arraySplittate[1]);
+											} else if (temp_input_entries.get(l).getIsARelation()) {
+												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
+														.get(temp_input_entries.get(l).getNum_entry())).getName());
+											} else {
+												// Here is writing a "string" or
+												// value
+												writer.print(DT.getRows().get(k).getInput()
+														.get(temp_input_entries.get(l).getNum_entry()));
+											}
+
+											firstInput = false;
+
+										}
+
+									} // end for every input
+
+									// WRITING THE OUTPUT FOR THE ROW IF TRUE
+									writer.print(", ");
+									if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
+											.equals("-")) {
+										// IF THE OUTPUT NAME IS DIFFERENT FROM
+										// "-"
+										// HERE THERE IS THE LIMIT OF 1 PROPERTY
+										// IN THE OUTPUT NAME
+										if (getPropertyFromString(DT.getOutput_names()
+												.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
+														.isAnObjectProperty()) {
+											// Here it is expecting to find an
+											// instance as output
+											writer.print(
+													"?SUM" + (num_input - 1) + "+"
+															+ getInstanceFromString(DT.getRows().get(k).getOutput()
+																	.get(temp_output_entries.get(j).getNum_entry()))
+																			.getName());
+										} else {
+											if (firstRow) {
+												writer.print(DT.getRows().get(k).getOutput()
+														.get(temp_output_entries.get(j).getNum_entry()));
+											} else {
+												writer.print("?SUM" + (num_input - 1) + "+" + DT.getRows().get(k)
+														.getOutput().get(temp_output_entries.get(j).getNum_entry()));
+											}
+											// Here it is expeecting to find a
+											// datatype value as output
+											// writer.print(DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry()));
+
+										}
+									} else {
+										// IF THE OUTPUT IS "-"
+										writer.print("\"\"");
+									}
+
+									// WRITING THE OUTPUT FOR THE ROW IF FALSE
+									writer.print(", ");
+									if (firstRow) {
+										// HERE I WRITE THE ALTERNATIVE VALUE IF
+										// IT EXISTS
+										if (!alternative_rule_index.equals("")) {
+											//THERE IS NO ALTERNATIVE RULE IN THe SUM AGGREGATOR
+											// writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index)).getOutput().get(temp_output_entries.get(j).getNum_entry()));
+											writer.print("0");
+										} else {
+											writer.print("0");
+										}
+
+									} else {
+										writer.print("?SUM" + (num_input - 1));
+									}
+									writer.print(")");
+									if (k == DT.getRows().size() - 1) {
+										writer.println(" AS " + "?TOTSUM" + ") .");
+									} else {
+										writer.println(" AS " + "?SUM" + num_input + ") .");
+									}
+
+								} // end if output is not "-"
+								firstRow = false;
+							} // for every row
+							//writer.println("FILTER(" + "?TOTSUM" + " != \"\") .");
+						}
+						
+						//HERE STARTS THE COUNT PART:
+						 num_input = 0;
+						 firstRow = true;
+						
+						if (temp_output_entries.get(j).getHaveValue()) {
+							// GETTING ALL THE ROWS OF THE DT
+							for (int k = 0; k < DT.getRows().size(); k++) {
+								// IF THE OUTPUT IS DIFFERENT FROM "-"
+								if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
+										.equals("-") && !("" + k).equals(alternative_rule_index)) {
+									boolean firstInput = true;
+									writer.print("BIND(");
+									writer.print("IF (");
+									num_input++;
+
+									// PARSING ALL THE EFFECTIVE INPUTS
+									for (int l = 0; l < temp_input_entries.size(); l++) {
+
+										if (temp_input_entries.get(l).getHaveValue() && !DT.getRows().get(k).getInput()
+												.get(temp_input_entries.get(l).getNum_entry()).equals("-")) {
+											if (!firstInput) {
+												writer.print(" && ");
+											}
+
+											// WRITING THE DESTINATION INPUT
+											// CRITERIA
+											writer.print(temp_input_entries.get(l).getDest_name());
+											// WRITING THE OPERATOR OF INPUT
+											// CRITERIA
+											String[] arraySplittate = DT.getRows().get(k).getInput()
+													.get(temp_input_entries.get(l).getNum_entry()).split(" ");
+											if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
+													|| arraySplittate[0].startsWith(">")
+													|| arraySplittate[0].startsWith("<")) {
+												// Here is parsing a number/date
+												// operator
+												writer.print(arraySplittate[0]);
+											} else {
+												// Here is parsing a non
+												// number/date operator
+												writer.print(" = ");
+											}
+
+											// WRITING THE INPUT DATA CRITERIA
+											if (arraySplittate.length == 2 && arraySplittate[0].startsWith("=")
+													|| arraySplittate[0].startsWith(">")
+													|| arraySplittate[0].startsWith("<")) {
+												// Here is writing a date/number
+												// value
+												writer.print(arraySplittate[1]);
+											} else if (temp_input_entries.get(l).getIsARelation()) {
+												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
+														.get(temp_input_entries.get(l).getNum_entry())).getName());
+											} else {
+												// Here is writing a "string" or
+												// value
+												writer.print(DT.getRows().get(k).getInput()
+														.get(temp_input_entries.get(l).getNum_entry()));
+											}
+
+											firstInput = false;
+
+										}
+
+									} // end for every input
+
+									// WRITING THE OUTPUT FOR THE ROW IF TRUE
+									writer.print(", ");
+									if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
+											.equals("-")) {
+										// IF THE OUTPUT NAME IS DIFFERENT FROM
+										// "-"
+										// HERE THERE IS THE LIMIT OF 1 PROPERTY
+										// IN THE OUTPUT NAME
+										if (getPropertyFromString(DT.getOutput_names()
+												.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
+														.isAnObjectProperty()) {
+											// Here it is expecting to find an
+											// instance as output
+											writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+													.get(temp_output_entries.get(j).getNum_entry())).getName());
+										} else {
+											if (firstRow) {
+												writer.print("1");
+											} else {
+												writer.print("?COUNT" + ((num_input) - 1) + "+1");
+											}
+											// Here it is expeecting to find a
+											// datatype value as output
+											// writer.print(DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry()));
+
+										}
+									} else {
+										// IF THE OUTPUT IS "-"
+										writer.print("\"\"");
+									}
+
+									// WRITING THE OUTPUT FOR THE ROW IF FALSE
+									writer.print(", ");
+									if (firstRow) {
+										// HERE I WRITE THE ALTERNATIVE VALUE IF
+										// IT EXISTS
+										if (!alternative_rule_index.equals("")) {
+											//THIS AGGREGATOR DOESN'T HAVE AN ALTERNATIVE RULE
+											// writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index)).getOutput().get(temp_output_entries.get(j).getNum_entry()));
+											writer.print("0");
+										} else {
+											writer.print("0");
+										}
+
+									} else {
+										writer.print("?COUNT" + (num_input - 1));
+									}
+									writer.print(")");
+									if (k == DT.getRows().size() - 1) {
+										writer.println(" AS " + "?TOTCOUNT" + ") .");
+									} else {
+										writer.println(" AS " + "?COUNT" + num_input + ") .");
+									}
+
+								} // end if output is not "-"
+								firstRow = false;
+							} // for every row
+							writer.println("FILTER(" + "?TOTCOUNT" + " != 0) .");
+							writer.println("BIND(?TOTSUM/?TOTCOUNT AS " + temp_output_entries.get(j).getDest_name() + ")");
+						}
+						
+						
+						
 						writer.println("}");
 						writer.println("");
 					} else {

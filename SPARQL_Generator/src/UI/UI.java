@@ -272,7 +272,7 @@ public class UI extends JFrame{
 		btnExecuteDT.setEnabled(false);
 		btnExecuteDT.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//op.printDecisionTables();
+				op.printDecisionTables();
 				op.executeDecisionTables();
 				//op.testing();
 			}
