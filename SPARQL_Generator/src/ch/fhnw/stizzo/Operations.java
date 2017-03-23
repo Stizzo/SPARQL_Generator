@@ -800,22 +800,26 @@ public class Operations {
 					DT.getInput_names());
 			ArrayList<ADOxxDecisionTableNormalizedEntry> temp_output_entries = normalizeInputEntries(
 					DT.getOutput_names());
-			// TEST FOR NORMALIZED INPUT ENTRY
+			
 			/*
-			 * for (int k = 0; k < temp_input_entries.size();k++){
-			 * System.out.println(temp_input_entries.get(k).getObject_name() +
-			 * " - " + temp_input_entries.get(k).getProperty() + " => " +
-			 * temp_input_entries.get(k).getDest_name() + " ("
-			 * +temp_input_entries.get(k).getType()+")"); }
-			 * System.out.println("-----------------");
-			 */
+			 //TEST FOR NORMALIZED INPUT ENTRY
+			for (int k = 0; k < temp_input_entries.size();k++){
+				printNormalizedEntry(temp_input_entries.get(k));
+				System.out.println("-------------");
+			}
+			for (int k = 0; k < temp_output_entries.size(); k++){
+				printNormalizedEntry(temp_output_entries.get(k));
+				System.out.println("-------------");
+			}
+			*/
+			
+			
 			// INSTANTIATE VARIABLES OF CLASSES
 			for (int j = 0; j < temp_input_entries.size(); j++) {
 				if (!temp_input_entries.get(j).getObject_name().startsWith("?")
 						&& !variableIsInList(temp_input_entries.get(j).getObject_name())) {
 					variables.add(new VariableMatch(temp_input_entries.get(j).getObject_name(),
 							getClassFromString(temp_input_entries.get(j).getObject_name())));
-
 				}
 			}
 			// UPDATING THE CLASS VARIABLE ON NORMALIZED INPUT
@@ -824,9 +828,11 @@ public class Operations {
 					if (temp_input_entries.get(j).getObject_name().equals(variables.get(k).getVariableName())) {
 						temp_input_entries.get(j).setObject_name("?" + temp_input_entries.get(j).getObject_name());
 					}
-					if (temp_input_entries.get(j).getDest_name().equals(variables.get(k).getVariableName())) {
+					
+					if (temp_input_entries.get(j).getDest_name().equals(variables.get(k).getVariableName()) ) {
 						temp_input_entries.get(j).setDest_name("?" + temp_input_entries.get(j).getDest_name());
 					}
+					
 				}
 			}
 			// UPDATING THE CLASS VARIABLE ON NORMALIZED OUTPUT
@@ -851,9 +857,10 @@ public class Operations {
 					}
 				}
 			}
-
+	
+		
 			if (DT.getHit_policy().equals("Single Hit Unique") ||
-					DT.getHit_policy().equals("Single Hit First") ||
+					//DT.getHit_policy().equals("Single Hit First") ||
 					DT.getHit_policy().equals("Single Hit Any")) {
 				// ***********************
 				// 1 - SINGLE HIT UNIQUE
@@ -866,10 +873,26 @@ public class Operations {
 					writer_status.println("WARNING: Cannot check the consistency for the Decision Table \""
 							+ adoxxDecisionTables.get(i).getName() + "\" with the Hit Policy \"Single Hit Any\" (A)");
 				}
-				// ***********************
-				// 4 - SINGLE HIT FIRST
-				// ***********************
+				
+				
+				String alternative_rule_index = "";
+				for (int l = 0; l < DT.getRows().size(); l++) {
+					boolean null_value = true;
+					for (int k = 0; k < DT.getRows().get(l).getInput().size(); k++) {
+						
+						if (!DT.getRows().get(l).getInput().get(k).equals("-")) {
+							null_value = false;
+						}
+					}
+					if (null_value) {
+						alternative_rule_index = l + "";
+					}
+				}
+				
+				
+				
 				for (int j = 0; j < temp_output_entries.size(); j++) {
+					
 					// PARSING ALL THE OUTPUT
 					writer.println("CONSTRUCT {");
 
@@ -913,9 +936,9 @@ public class Operations {
 					}
 					// INSTANCE OF INPUT THAT ARE NOT A RELATION
 					for (int c = 0; c < temp_input_entries.size(); c++) {
-						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()) {
+						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation() && !temp_input_entries.get(c).getIsAnInstance()) {
 							writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
-							if (temp_input_entries.get(c).getProperty().equals("label")) {
+							if (temp_input_entries.get(c).getProperty().equals("label") ) {
 								writer.print("rdfs:label");
 							} else {
 								writer.print(getPropertyFromString(temp_input_entries.get(c).getProperty()).getName());
@@ -943,10 +966,10 @@ public class Operations {
 					int num_input = 0;
 					if (temp_output_entries.get(j).getHaveValue()) {
 						// GETTING ALL THE ROWS OF THE DT
+						
 						for (int k = 0; k < DT.getRows().size(); k++) {
-							// IF THE OUTPUT IS DIFFERENT FROM "-"
-							if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
-									.equals("-")) {
+								
+							if (!("" + k).equals(alternative_rule_index)) {
 
 								writer.print("IF (");
 								num_input++;
@@ -985,7 +1008,7 @@ public class Operations {
 											// Here is writing a date/number
 											// value
 											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
+										} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 													.get(temp_input_entries.get(l).getNum_entry())).getName());
 										} else {
@@ -1009,16 +1032,16 @@ public class Operations {
 									// THE OUTPUT NAME
 									if (getPropertyFromString(DT.getOutput_names()
 											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
+													.isADataTypeProperty()) {
 										// Here it is expecting to find an
 										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
+										writer.print(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry()));
 									} else {
 										// Here it is expeecting to find a
 										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
+										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry())).getName());
 									}
 								} else {
 									// IF THE OUTPUT IS "-"
@@ -1028,7 +1051,13 @@ public class Operations {
 								writer.println(", ");
 							} // end if output is not "-"
 							if (k == DT.getRows().size() - 1) {
-								writer.print("\"\"");
+								if(!alternative_rule_index.equals("")){
+									writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index))
+											.getOutput().get(temp_output_entries.get(j).getNum_entry()));
+								}else {
+									writer.print("\"\"");
+								}
+								
 								for (int z = 0; z < num_input; z++) {
 									writer.print(")");
 								}
@@ -1045,7 +1074,7 @@ public class Operations {
 					writer.println("");
 
 				} // end output
-				writer.println("=========");
+				
 
 				variables.clear();
 
@@ -1053,27 +1082,29 @@ public class Operations {
 				// ***********************
 				// 3 - SINGLE HIT PRIORITY
 				// ***********************
-
+				
 				for (int j = 0; j < temp_output_entries.size(); j++) {
-					// ORDERING ROWS BASED ON OUTPUT VALUES
+					//===== START THE ORDERING OF ROWS
 					ArrayList<ADOxxDecisionTableRow> ordered_rows = new ArrayList<ADOxxDecisionTableRow>();
-					String temp_output_values_array[] = DT.getOutput_values()
-							.get(temp_output_entries.get(j).getNum_entry()).split(",");
+					String temp_output_values_array[] = DT.getOutput_values().get(temp_output_entries.get(j).getNum_entry()).split(",");
 					while (DT.getRows().size()>0){
 					for (int k = 0; k < temp_output_values_array.length; k++){
-						
-						for (int l = 0; l < DT.getRows().size(); l++){
+						Boolean found = false;
+						while (found == false){
+						for (int l = DT.getRows().size()-1; l >= 0;  l--){
 							//Finding the rows and adding them to an ordered list
+							
 							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								ordered_rows.add(DT.getRows().get(l));
-							}
-						}
-						for (int l = 0; l < DT.getRows().size(); l++){
-							//Finding the rows and removing them to the list of rows
-							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								DT.getRows().remove(l);
+								found = true;
+								
 							}
+							
 						}
+						}
+						
+						
 					
 						
 					}
@@ -1088,7 +1119,32 @@ public class Operations {
 						
 					}
 					
+					
 					DT.setRows(ordered_rows);
+					
+					//===== FINISH THE ORDERING OF ROWS
+					
+					int numberOfInputValues = 0; //THIS NUMBER DEFINES HOW MANY INPUT COLUMNS WITH VALUES ARE IN A TABLE
+					for (int l = 0; l < temp_input_entries.size(); l++){
+						if (temp_input_entries.get(l).getHaveValue() == true){
+							numberOfInputValues++;
+						}
+					}
+					
+					String alternative_rule_index = "";
+					for (int l = 0; l < DT.getRows().size(); l++) {
+						boolean null_value = true;
+						for (int k = 0; k < DT.getRows().get(l).getInput().size(); k++) {
+							
+							if (!DT.getRows().get(l).getInput().get(k).equals("-")) {
+								null_value = false;
+							}
+						}
+						if (null_value) {
+							alternative_rule_index = l + "";
+						}
+					}
+					
 					
 					// PARSING ALL THE OUTPUT
 					writer.println("CONSTRUCT {");
@@ -1133,7 +1189,7 @@ public class Operations {
 					}
 					// INSTANCE OF INPUT THAT ARE NOT A RELATION
 					for (int c = 0; c < temp_input_entries.size(); c++) {
-						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()) {
+						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation() && !temp_input_entries.get(c).getIsAnInstance()) {
 							writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
 							if (temp_input_entries.get(c).getProperty().equals("label")) {
 								writer.print("rdfs:label");
@@ -1163,11 +1219,10 @@ public class Operations {
 					int num_input = 0;
 					if (temp_output_entries.get(j).getHaveValue()) {
 						// GETTING ALL THE ROWS OF THE DT
+						
 						for (int k = 0; k < DT.getRows().size(); k++) {
-							// IF THE OUTPUT IS DIFFERENT FROM "-"
-
-							if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
-									.equals("-")) {
+								
+							if (!("" + k).equals(alternative_rule_index)) {
 
 								writer.print("IF (");
 								num_input++;
@@ -1206,7 +1261,7 @@ public class Operations {
 											// Here is writing a date/number
 											// value
 											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
+										} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 													.get(temp_input_entries.get(l).getNum_entry())).getName());
 										} else {
@@ -1230,16 +1285,16 @@ public class Operations {
 									// THE OUTPUT NAME
 									if (getPropertyFromString(DT.getOutput_names()
 											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
+													.isADataTypeProperty()) {
 										// Here it is expecting to find an
 										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
+										writer.print(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry()));
 									} else {
 										// Here it is expeecting to find a
 										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
+										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry())).getName());
 									}
 								} else {
 									// IF THE OUTPUT IS "-"
@@ -1249,7 +1304,13 @@ public class Operations {
 								writer.println(", ");
 							} // end if output is not "-"
 							if (k == DT.getRows().size() - 1) {
-								writer.print("\"\"");
+								if(!alternative_rule_index.equals("")){
+									writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index))
+											.getOutput().get(temp_output_entries.get(j).getNum_entry()));
+								}else {
+									writer.print("\"\"");
+								}
+								
 								for (int z = 0; z < num_input; z++) {
 									writer.print(")");
 								}
@@ -1266,12 +1327,12 @@ public class Operations {
 					writer.println("");
 
 				} // end output
-				writer.println("=========");
+				
 
 				variables.clear();
-			} else if (DT.getHit_policy().equals("Single Hit Rule Number")) {
+			} else if (DT.getHit_policy().equals("Single Hit First")) {
 				// ***********************
-				// 5 - SINGLE HIT RULE NUMBER
+				// 4 - SINGLE HIT FIRST
 				// ***********************
 				ArrayList<ADOxxDecisionTableRow> sorted_rows = new ArrayList<ADOxxDecisionTableRow>();
 				while (DT.getRows().size() != 0) {
@@ -1288,8 +1349,36 @@ public class Operations {
 				}
 
 				DT.setRows(sorted_rows);
+				
+				
+				
+				
+				
+				
 
 				for (int j = 0; j < temp_output_entries.size(); j++) {
+					int numberOfInputValues = 0; //THIS NUMBER DEFINES HOW MANY INPUT COLUMNS WITH VALUES ARE IN A TABLE
+					for (int l = 0; l < temp_input_entries.size(); l++){
+						if (temp_input_entries.get(l).getHaveValue() == true){
+							numberOfInputValues++;
+						}
+					}
+					
+					String alternative_rule_index = "";
+					for (int l = 0; l < DT.getRows().size(); l++) {
+						boolean null_value = true;
+						for (int k = 0; k < DT.getRows().get(l).getInput().size(); k++) {
+							
+							if (!DT.getRows().get(l).getInput().get(k).equals("-")) {
+								null_value = false;
+							}
+						}
+						if (null_value) {
+							alternative_rule_index = l + "";
+						}
+					}
+					
+					
 					// PARSING ALL THE OUTPUT
 					writer.println("CONSTRUCT {");
 
@@ -1333,7 +1422,7 @@ public class Operations {
 					}
 					// INSTANCE OF INPUT THAT ARE NOT A RELATION
 					for (int c = 0; c < temp_input_entries.size(); c++) {
-						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()) {
+						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()&& !temp_input_entries.get(c).getIsAnInstance()) {
 							writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
 							if (temp_input_entries.get(c).getProperty().equals("label")) {
 								writer.print("rdfs:label");
@@ -1363,10 +1452,10 @@ public class Operations {
 					int num_input = 0;
 					if (temp_output_entries.get(j).getHaveValue()) {
 						// GETTING ALL THE ROWS OF THE DT
+						
 						for (int k = 0; k < DT.getRows().size(); k++) {
-							// IF THE OUTPUT IS DIFFERENT FROM "-"
-							if (!DT.getRows().get(k).getOutput().get(temp_output_entries.get(j).getNum_entry())
-									.equals("-")) {
+								
+							if (!("" + k).equals(alternative_rule_index)) {
 
 								writer.print("IF (");
 								num_input++;
@@ -1405,7 +1494,7 @@ public class Operations {
 											// Here is writing a date/number
 											// value
 											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
+										} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 													.get(temp_input_entries.get(l).getNum_entry())).getName());
 										} else {
@@ -1429,16 +1518,16 @@ public class Operations {
 									// THE OUTPUT NAME
 									if (getPropertyFromString(DT.getOutput_names()
 											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
+													.isADataTypeProperty()) {
 										// Here it is expecting to find an
 										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
+										writer.print(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry()));
 									} else {
 										// Here it is expeecting to find a
 										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
+										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry())).getName());
 									}
 								} else {
 									// IF THE OUTPUT IS "-"
@@ -1448,7 +1537,13 @@ public class Operations {
 								writer.println(", ");
 							} // end if output is not "-"
 							if (k == DT.getRows().size() - 1) {
-								writer.print("\"\"");
+								if(!alternative_rule_index.equals("")){
+									writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index))
+											.getOutput().get(temp_output_entries.get(j).getNum_entry()));
+								}else {
+									writer.print("\"\"");
+								}
+								
 								for (int z = 0; z < num_input; z++) {
 									writer.print(")");
 								}
@@ -1465,7 +1560,7 @@ public class Operations {
 					writer.println("");
 
 				} // end output
-				writer.println("=========");
+				
 
 				variables.clear();
 			
@@ -1473,31 +1568,31 @@ public class Operations {
 				// ***********************
 				// 6 - MULTIPLE HIT OUTPUT ORDER
 				// ***********************
-				// TODO: implement priority
+				
 
 				for (int j = 0; j < temp_output_entries.size(); j++) {
 					// GETTING ALL THE ROWS OF THE DT
 					
-					// ORDERING ROWS BASED ON OUTPUT VALUES
+					//===== START THE ORDERING OF ROWS
 					ArrayList<ADOxxDecisionTableRow> ordered_rows = new ArrayList<ADOxxDecisionTableRow>();
-					String temp_output_values_array[] = DT.getOutput_values()
-							.get(temp_output_entries.get(j).getNum_entry()).split(",");
+					String temp_output_values_array[] = DT.getOutput_values().get(temp_output_entries.get(j).getNum_entry()).split(",");
 					while (DT.getRows().size()>0){
 					for (int k = 0; k < temp_output_values_array.length; k++){
-						
-						for (int l = 0; l < DT.getRows().size(); l++){
+						Boolean found = false;
+						while (found == false){
+						for (int l = DT.getRows().size()-1; l >= 0;  l--){
 							//Finding the rows and adding them to an ordered list
+							
 							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								ordered_rows.add(DT.getRows().get(l));
-							}
-						}
-						for (int l = 0; l < DT.getRows().size(); l++){
-							//Finding the rows and removing them to the list of rows
-							if (DT.getRows().get(l).getOutput().get(temp_output_entries.get(j).getNum_entry()).equals(temp_output_values_array[k].trim())){
 								DT.getRows().remove(l);
+								found = true;
+								
 							}
+							
 						}
-					
+						}
+						
 						
 					}
 					if (DT.getRows().size()>0){
@@ -1511,7 +1606,10 @@ public class Operations {
 						
 					}
 					
+					
 					DT.setRows(ordered_rows);
+					
+					//===== FINISH THE ORDERING OF ROWS
 					
 					for (int k = 0; k < DT.getRows().size(); k++) {
 						// PARSING ALL THE OUTPUT
@@ -1561,7 +1659,7 @@ public class Operations {
 						// INSTANCE OF INPUT THAT ARE NOT A RELATION
 						for (int c = 0; c < temp_input_entries.size(); c++) {
 							if (temp_input_entries.get(c).getHaveValue()
-									&& !temp_input_entries.get(c).getIsARelation()) {
+									&& !temp_input_entries.get(c).getIsARelation() && !temp_input_entries.get(c).getIsAnInstance()) {
 								writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
 								if (temp_input_entries.get(c).getProperty().equals("label")) {
 									writer.print("rdfs:label");
@@ -1632,7 +1730,7 @@ public class Operations {
 											// Here is writing a date/number
 											// value
 											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
+										} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 													.get(temp_input_entries.get(l).getNum_entry())).getName());
 										} else {
@@ -1656,16 +1754,16 @@ public class Operations {
 									// THE OUTPUT NAME
 									if (getPropertyFromString(DT.getOutput_names()
 											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
+													.isADataTypeProperty()) {
 										// Here it is expecting to find an
 										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
+										writer.print(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry()));
 									} else {
 										// Here it is expeecting to find a
 										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
+										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry())).getName());
 									}
 								} else {
 									// IF THE OUTPUT IS "-"
@@ -1685,7 +1783,7 @@ public class Operations {
 					} // end rows
 
 				} // end output
-				writer.println("=========");
+				
 
 				variables.clear();
 			} else if (DT.getHit_policy().equals("Multiple Hit Rule Order")) {
@@ -1759,7 +1857,7 @@ public class Operations {
 						// INSTANCE OF INPUT THAT ARE NOT A RELATION
 						for (int c = 0; c < temp_input_entries.size(); c++) {
 							if (temp_input_entries.get(c).getHaveValue()
-									&& !temp_input_entries.get(c).getIsARelation()) {
+									&& !temp_input_entries.get(c).getIsARelation() && !temp_input_entries.get(c).getIsAnInstance()) {
 								writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
 								if (temp_input_entries.get(c).getProperty().equals("label")) {
 									writer.print("rdfs:label");
@@ -1831,7 +1929,7 @@ public class Operations {
 											// Here is writing a date/number
 											// value
 											writer.print(arraySplittate[1]);
-										} else if (temp_input_entries.get(l).getIsARelation()) {
+										} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 											writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 													.get(temp_input_entries.get(l).getNum_entry())).getName());
 										} else {
@@ -1855,16 +1953,16 @@ public class Operations {
 									// THE OUTPUT NAME
 									if (getPropertyFromString(DT.getOutput_names()
 											.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-													.isAnObjectProperty()) {
+													.isADataTypeProperty()) {
 										// Here it is expecting to find an
 										// instance as output
-										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry())).getName());
+										writer.print(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry()));
 									} else {
 										// Here it is expeecting to find a
 										// datatype value as output
-										writer.print(DT.getRows().get(k).getOutput()
-												.get(temp_output_entries.get(j).getNum_entry()));
+										writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+												.get(temp_output_entries.get(j).getNum_entry())).getName());
 									}
 								} else {
 									// IF THE OUTPUT IS "-"
@@ -1884,7 +1982,7 @@ public class Operations {
 					} // end outputs
 
 				} // end rows
-				writer.println("=========");
+				
 
 				variables.clear();
 
@@ -1892,18 +1990,27 @@ public class Operations {
 				// ***********************
 				// 8 - MULTIPLE HIT COLLECTION
 				// ***********************
+				int numberOfInputValues = 0; //THIS NUMBER DEFINES HOW MANY INPUT COLUMNS WITH VALUES ARE IN A TABLE
+				for (int l = 0; l < temp_input_entries.size(); l++){
+					if (temp_input_entries.get(l).getHaveValue() == true){
+						numberOfInputValues++;
+					}
+				}
+				
 				String alternative_rule_index = "";
-				for (int j = 0; j < DT.getRows().size(); j++) {
+				for (int l = 0; l < DT.getRows().size(); l++) {
 					boolean null_value = true;
-					for (int k = 0; k < DT.getRows().get(j).getInput().size(); k++) {
-						if (!DT.getRows().get(j).getInput().get(k).equals("-")) {
+					for (int k = 0; k < DT.getRows().get(l).getInput().size(); k++) {
+						System.out.println(DT.getRows().get(l).getInput().get(k));
+						if (!DT.getRows().get(l).getInput().get(k).equals("-")) {
 							null_value = false;
 						}
 					}
 					if (null_value) {
-						alternative_rule_index = j + "";
+						alternative_rule_index = l + "";
 					}
 				}
+				
 
 				for (int j = 0; j < temp_output_entries.size(); j++) {
 					// PARSING ALL THE OUTPUT
@@ -1949,7 +2056,7 @@ public class Operations {
 					}
 					// INSTANCE OF INPUT THAT ARE NOT A RELATION
 					for (int c = 0; c < temp_input_entries.size(); c++) {
-						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation()) {
+						if (temp_input_entries.get(c).getHaveValue() && !temp_input_entries.get(c).getIsARelation() && !temp_input_entries.get(c).getIsAnInstance()) {
 							writer.print("OPTIONAL {" + temp_input_entries.get(c).getObject_name() + " ");
 							if (temp_input_entries.get(c).getProperty().equals("label")) {
 								writer.print("rdfs:label");
@@ -2027,7 +2134,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2057,16 +2164,16 @@ public class Operations {
 										// IN THE OUTPUT NAME
 										if (getPropertyFromString(DT.getOutput_names()
 												.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-														.isAnObjectProperty()) {
+														.isADataTypeProperty()) {
 											// Here it is expecting to find an
 											// instance as output
-											writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-													.get(temp_output_entries.get(j).getNum_entry())).getName());
+											writer.print(DT.getRows().get(k).getOutput()
+													.get(temp_output_entries.get(j).getNum_entry()));
 										} else {
 											// Here it is expeecting to find a
 											// datatype value as output
-											writer.print(DT.getRows().get(k).getOutput()
-													.get(temp_output_entries.get(j).getNum_entry()));
+											writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+													.get(temp_output_entries.get(j).getNum_entry())).getName());
 										}
 									} else {
 										// IF THE OUTPUT IS "-"
@@ -2154,7 +2261,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2184,16 +2291,16 @@ public class Operations {
 										// IN THE OUTPUT NAME
 										if (getPropertyFromString(DT.getOutput_names()
 												.get(temp_output_entries.get(j).getNum_entry()).getProperties().get(0))
-														.isAnObjectProperty()) {
+														.isADataTypeProperty()) {
 											// Here it is expecting to find an
 											// instance as output
-											writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
-													.get(temp_output_entries.get(j).getNum_entry())).getName());
+											writer.print(DT.getRows().get(k).getOutput()
+													.get(temp_output_entries.get(j).getNum_entry()));
 										} else {
 											// Here it is expeecting to find a
 											// datatype value as output
-											writer.print(DT.getRows().get(k).getOutput()
-													.get(temp_output_entries.get(j).getNum_entry()));
+											writer.print(getInstanceFromString(DT.getRows().get(k).getOutput()
+													.get(temp_output_entries.get(j).getNum_entry())).getName());
 										}
 									} else {
 										// IF THE OUTPUT IS "-"
@@ -2281,7 +2388,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2312,9 +2419,8 @@ public class Operations {
 											// instance as output
 											writer.print(
 													"?SUM" + (num_input - 1) + "+"
-															+ getInstanceFromString(DT.getRows().get(k).getOutput()
-																	.get(temp_output_entries.get(j).getNum_entry()))
-																			.getName());
+															+ DT.getRows().get(k).getOutput()
+																	.get(temp_output_entries.get(j).getNum_entry()));
 										} else {
 											if (firstRow) {
 												writer.print(DT.getRows().get(k).getOutput()
@@ -2415,7 +2521,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2496,7 +2602,7 @@ public class Operations {
 						// ===============
 						// AVG AGGREGATOR
 						// ===============
-						//TODO: aggiungere la parte count e fare la divisione
+						
 						int num_input = 0;
 						boolean firstRow = true;
 						
@@ -2548,7 +2654,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2579,9 +2685,8 @@ public class Operations {
 											// instance as output
 											writer.print(
 													"?SUM" + (num_input - 1) + "+"
-															+ getInstanceFromString(DT.getRows().get(k).getOutput()
-																	.get(temp_output_entries.get(j).getNum_entry()))
-																			.getName());
+															+ DT.getRows().get(k).getOutput()
+																	.get(temp_output_entries.get(j).getNum_entry()));
 										} else {
 											if (firstRow) {
 												writer.print(DT.getRows().get(k).getOutput()
@@ -2679,7 +2784,7 @@ public class Operations {
 												// Here is writing a date/number
 												// value
 												writer.print(arraySplittate[1]);
-											} else if (temp_input_entries.get(l).getIsARelation()) {
+											} else if (temp_input_entries.get(l).getIsARelation() || temp_input_entries.get(l).getIsAnInstance()) {
 												writer.print(getInstanceFromString(DT.getRows().get(k).getInput()
 														.get(temp_input_entries.get(l).getNum_entry())).getName());
 											} else {
@@ -2766,7 +2871,7 @@ public class Operations {
 					}
 
 				} // end output
-				writer.println("=========");
+				
 
 				variables.clear();
 
@@ -2876,19 +2981,23 @@ public class Operations {
 		ArrayList<ADOxxDecisionTableNormalizedEntry> result = new ArrayList<ADOxxDecisionTableNormalizedEntry>();
 
 		for (int i = 0; i < entries.size(); i++) {
-			if (entries.get(i).getProperties().size() == 1) {
+			
+			if (entries.get(i).getProperties().size() == 0){
+				//HERE we are parsing a single instance without relation
+				result.add(new ADOxxDecisionTableNormalizedEntry(entries.get(i).getObject_name(), entries.get(i).getObject_name(), false, true, i,true));
+			} else if (entries.get(i).getProperties().size() == 1) {
 
 				if (getPropertyFromString(entries.get(i).getProperties().get(0)).isAnObjectProperty()) {
 					// Here we are parsing both an INPUT entry and a RELATION
 					result.add(new ADOxxDecisionTableNormalizedEntry(entries.get(i).getObject_name(),
-							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), true, true, i));
+							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), true, true, i, false));
 				} else if (getPropertyFromString(entries.get(i).getProperties().get(0)).isADataTypeProperty()) {
 					// Here we are parsing an INPUT entry only
 					result.add(new ADOxxDecisionTableNormalizedEntry(entries.get(i).getObject_name(),
-							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), false, true, i));
+							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), false, true, i, false));
 				} else {
 					result.add(new ADOxxDecisionTableNormalizedEntry(entries.get(i).getObject_name(),
-							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), false, true, i));
+							entries.get(i).getProperties().get(0), entries.get(i).getDest_name(), false, true, i, false));
 				}
 
 			} else {
@@ -2902,24 +3011,27 @@ public class Operations {
 
 					if (j != entries.get(i).getProperties().size() - 1) {
 						result.add(new ADOxxDecisionTableNormalizedEntry(next_source,
-								entries.get(i).getProperties().get(j), "?" + i + "temp" + j, true, false));
+								entries.get(i).getProperties().get(j), "?" + i + "temp" + j, true, false, false));
 						next_source = "?" + i + "temp" + j;
 					} else {
 						// Here we are parsing the last element of a COMBO
 						if (getPropertyFromString(entries.get(i).getProperties().get(j)).isAnObjectProperty()) {
+							
 							// Here the last property is an objectProperty
 							result.add(new ADOxxDecisionTableNormalizedEntry(next_source,
-									entries.get(i).getProperties().get(j), entries.get(i).getDest_name(), true, true));
+									entries.get(i).getProperties().get(j), entries.get(i).getDest_name(), true, true, i, false));
 
 						} else if (getPropertyFromString(entries.get(i).getProperties().get(j)).isADataTypeProperty()) {
+							
 							// Here the last property is a DataType Property
 							result.add(new ADOxxDecisionTableNormalizedEntry(next_source,
 									entries.get(i).getProperties().get(j), entries.get(i).getDest_name(), false, true,
-									i));
+									i, false));
 						} else {
+							
 							// Here i cannot identify the property
 							result.add(new ADOxxDecisionTableNormalizedEntry(next_source,
-									entries.get(i).getProperties().get(j), entries.get(i).getDest_name(), true, true));
+									entries.get(i).getProperties().get(j), entries.get(i).getDest_name(), true, true, false));
 						}
 
 					} // end if we are parsing the last property
@@ -2957,6 +3069,7 @@ public class Operations {
 			System.out.println("===========");
 		}
 
+	
 	}
 	/*
 	 * public void performConstructRule(ParameterizedSparqlString queryStr) {
@@ -2965,4 +3078,24 @@ public class Operations {
 	 * QueryExecutionFactory.create(queryStr.toString(), rdfModel); temp =
 	 * qexec.execConstruct(); rdfModel.add(temp); }
 	 */
+	
+public void printNormalizedEntry (ADOxxDecisionTableNormalizedEntry normalized_entry){
+	System.out.println("NEW ENTRY:");
+	System.out.println("     Object_name: " + normalized_entry.getObject_name());
+	//if (normalized_entry.getProperty() != null){
+		System.out.println("    Property: " + normalized_entry.getProperty());
+	//}else {
+		//System.out.println("    Property: " + "NOT DEFINED");
+	//}
+	System.out.println("    Dest_name: " + normalized_entry.getDest_name());
+	System.out.println("    isARelation: " + normalized_entry.getIsARelation());
+	System.out.println("    haveValue: " + normalized_entry.getHaveValue());	
+	//if (Integer.toString(normalized_entry.getNum_entry()) != null){
+		System.out.println("    num_entry: " + normalized_entry.getNum_entry());
+	//}else {
+	//	System.out.println("    num_entry: " + "NOT DEFINED");
+	//}
+	System.out.println("    isAnInstance: " + normalized_entry.getIsAnInstance());
 }
+}
+

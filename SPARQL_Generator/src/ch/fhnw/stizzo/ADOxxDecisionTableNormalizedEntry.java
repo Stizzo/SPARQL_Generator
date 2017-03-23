@@ -7,6 +7,7 @@ public class ADOxxDecisionTableNormalizedEntry {
 	private Boolean isARelation;//Is a relation to write on the SparQL rule
 	private Boolean haveValue;	//Have a value to match in the decision table
 	private int num_entry;	//Match with the input/output entry  column
+	private Boolean isAnInstance;
 	
 	public String getObject_name() {
 		return object_name;
@@ -55,20 +56,31 @@ public class ADOxxDecisionTableNormalizedEntry {
 	public void setNum_entry(int num_entry) {
 		this.num_entry = num_entry;
 	}
+	
+
+	public Boolean getIsAnInstance() {
+		return isAnInstance;
+	}
+
+	public void setIsAnInstance(Boolean isAnInstance) {
+		this.isAnInstance = isAnInstance;
+	}
+	
 
 	public ADOxxDecisionTableNormalizedEntry(String object_name, String property, String dest_name, Boolean isARelation,
-			Boolean haveValue) {
+			Boolean haveValue, Boolean isAnInstance) {
 		super();
 		this.object_name = object_name;
 		this.property = property;
 		this.dest_name = dest_name;
 		this.isARelation = isARelation;
 		this.haveValue = haveValue;
+		this.isAnInstance = isAnInstance;
 		
 	}
 
 	public ADOxxDecisionTableNormalizedEntry(String object_name, String property, String dest_name, Boolean isARelation,
-			Boolean haveValue, int num_entry) {
+			Boolean haveValue, int num_entry, Boolean isAnInstance) {
 		super();
 		this.object_name = object_name;
 		this.property = property;
@@ -76,9 +88,19 @@ public class ADOxxDecisionTableNormalizedEntry {
 		this.isARelation = isARelation;
 		this.haveValue = haveValue;
 		this.num_entry = num_entry;
+		this.isAnInstance = isAnInstance;
 		
 	}
-
-
+	public ADOxxDecisionTableNormalizedEntry(String object_name, String dest_name, Boolean isARelation,
+			Boolean haveValue, int num_entry, Boolean isAnInstance) {
+		super();
+		this.object_name = object_name;
+		this.dest_name = dest_name;
+		this.isARelation = isARelation;
+		this.haveValue = haveValue;
+		this.num_entry = num_entry;
+		this.isAnInstance = isAnInstance;
+		
+	}
 	
 }
