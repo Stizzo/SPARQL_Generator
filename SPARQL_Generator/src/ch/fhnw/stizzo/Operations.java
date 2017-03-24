@@ -2926,11 +2926,13 @@ public class Operations {
 				}
 			}
 		}
-
-		if (result == null) {
+		if (result == null && !instance_name.trim().toLowerCase().equals("true") && !instance_name.trim().toLowerCase().equals("false") && !instance_name.startsWith("\"")) {
 			writer_status.println("WARNING: Cannot find an instance for the variable: " + instance_name);
+		}
+		if (result == null) {
 			result = new OntologyInstance(instance_name, new ArrayList<String>(), new ArrayList<OntologyAttribute>());
 		}
+		
 		return result;
 	}
 
