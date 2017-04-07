@@ -35,6 +35,7 @@ public class Operations {
 	private String temp_file = ".temp";
 	private String status_file = "report_";
 	private String output_file = "rules_";
+	private boolean enable_debug_info = true;
 
 	public Operations() {
 		this.classes = new ArrayList<OntologyClass>();
@@ -801,17 +802,18 @@ public class Operations {
 			ArrayList<ADOxxDecisionTableNormalizedEntry> temp_output_entries = normalizeInputEntries(
 					DT.getOutput_names());
 			
-			/*
-			 //TEST FOR NORMALIZED INPUT ENTRY
-			for (int k = 0; k < temp_input_entries.size();k++){
-				printNormalizedEntry(temp_input_entries.get(k));
-				System.out.println("-------------");
+			
+			if (enable_debug_info){
+				//TEST FOR NORMALIZED INPUT ENTRY
+				for (int k = 0; k < temp_input_entries.size();k++){
+					printNormalizedEntry(temp_input_entries.get(k));
+					System.out.println("-------------");
+				}
+					for (int k = 0; k < temp_output_entries.size(); k++){
+						printNormalizedEntry(temp_output_entries.get(k));
+						System.out.println("-------------");
+					}
 			}
-			for (int k = 0; k < temp_output_entries.size(); k++){
-				printNormalizedEntry(temp_output_entries.get(k));
-				System.out.println("-------------");
-			}
-			*/
 			
 			
 			// INSTANTIATE VARIABLES OF CLASSES
@@ -1072,7 +1074,7 @@ public class Operations {
 
 					writer.println("}");
 					writer.println("");
-
+					writer.println("==============");
 				} // end output
 				
 
@@ -1325,7 +1327,7 @@ public class Operations {
 
 					writer.println("}");
 					writer.println("");
-
+					writer.println("==============");
 				} // end output
 				
 
@@ -1558,6 +1560,7 @@ public class Operations {
 
 					writer.println("}");
 					writer.println("");
+					writer.println("==============");
 
 				} // end output
 				
@@ -1780,6 +1783,7 @@ public class Operations {
 						}
 						writer.println("}");
 						writer.println("");
+						writer.println("==============");
 					} // end rows
 
 				} // end output
@@ -1979,6 +1983,7 @@ public class Operations {
 						}
 						writer.println("}");
 						writer.println("");
+						writer.println("==============");
 					} // end outputs
 
 				} // end rows
@@ -2001,7 +2006,6 @@ public class Operations {
 				for (int l = 0; l < DT.getRows().size(); l++) {
 					boolean null_value = true;
 					for (int k = 0; k < DT.getRows().get(l).getInput().size(); k++) {
-						System.out.println(DT.getRows().get(l).getInput().get(k));
 						if (!DT.getRows().get(l).getInput().get(k).equals("-")) {
 							null_value = false;
 						}
@@ -2189,7 +2193,7 @@ public class Operations {
 											writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index))
 													.getOutput().get(temp_output_entries.get(j).getNum_entry()));
 										} else {
-											writer.print("\"\"");
+											writer.print("2147483647");
 										}
 
 									} else {
@@ -2205,10 +2209,11 @@ public class Operations {
 								} // end if output is not "-"
 								firstRow = false;
 							} // for every row
-							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
+							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != 2147483647) .");
 						}
 						writer.println("}");
 						writer.println("");
+						
 					} else if (DT.getAggregation_indicator().equals("Max")) {
 						// ===============
 						// MAX AGGREGATOR
@@ -2316,7 +2321,7 @@ public class Operations {
 											writer.print(DT.getRows().get(Integer.parseInt(alternative_rule_index))
 													.getOutput().get(temp_output_entries.get(j).getNum_entry()));
 										} else {
-											writer.print("\"\"");
+											writer.print("-2147483648");
 										}
 
 									} else {
@@ -2332,10 +2337,11 @@ public class Operations {
 								} // end if output is not "-"
 								firstRow = false;
 							} // for every row
-							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != \"\") .");
+							writer.println("FILTER(" + temp_output_entries.get(j).getDest_name() + " != -2147483648) .");
 						}
 						writer.println("}");
 						writer.println("");
+						
 					} else if (DT.getAggregation_indicator().equals("Sum")) {
 						// ===============
 						// SUM AGGREGATOR
@@ -2469,6 +2475,7 @@ public class Operations {
 						}
 						writer.println("}");
 						writer.println("");
+						
 					} else if (DT.getAggregation_indicator().equals("Count")) {
 						// ===============
 						// COUNT AGGREGATOR
@@ -2598,6 +2605,7 @@ public class Operations {
 						}
 						writer.println("}");
 						writer.println("");
+						
 					} else if (DT.getAggregation_indicator().equals("Avg")) {
 						// ===============
 						// AVG AGGREGATOR
@@ -2865,11 +2873,12 @@ public class Operations {
 						
 						writer.println("}");
 						writer.println("");
+						
 					} else {
 						writer_status.println(
 								"ERROR: AGGREGATOR not found/detected for the Decision Table \"" + DT.getName() + "\"");
 					}
-
+					writer.println("==============");
 				} // end output
 				
 
@@ -3083,7 +3092,7 @@ public class Operations {
 	
 public void printNormalizedEntry (ADOxxDecisionTableNormalizedEntry normalized_entry){
 	System.out.println("NEW ENTRY:");
-	System.out.println("     Object_name: " + normalized_entry.getObject_name());
+	System.out.println("    Object_name: " + normalized_entry.getObject_name());
 	//if (normalized_entry.getProperty() != null){
 		System.out.println("    Property: " + normalized_entry.getProperty());
 	//}else {
